@@ -1,6 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from handlers import messages
+from handlers import message, callback
 from dotenv import load_dotenv
 import os
 
@@ -11,7 +11,8 @@ async def main():
     bot = Bot(token=os.environ.get('TELEGRAM_TOKEN'))
     dp = Dispatcher()
 
-    dp.include_router(messages.router)
+    dp.include_router(message.router)
+    dp.include_router(callback.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
