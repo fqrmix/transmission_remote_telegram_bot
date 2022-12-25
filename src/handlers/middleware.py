@@ -1,7 +1,6 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery, TelegramObject
 from transmission_remote_core.app import TransmissionFacade
-from transmission_remote_core.app.core.controller.exception import ParseErorr
 from typing import Callable, Dict, Any, Awaitable
 
 transmission_facade = TransmissionFacade()
@@ -9,7 +8,7 @@ transmission_facade = TransmissionFacade()
 class TorrentMiddleware(BaseMiddleware):
     def __init__(self) -> None:
         self.torrent_object = None
-        self.torrent_list = None
+        self.torrent_dict = dict()
         self.error = None
 
     async def __call__(
@@ -20,14 +19,15 @@ class TorrentMiddleware(BaseMiddleware):
     ) -> Any:
 
         data['torrent_object'] = self.torrent_object
-        data['torrent_list'] = self.torrent_list
+        data['torrent_list'] = self.torrent_dict
         data['error'] = self.error
 
         if type(event) is Message:
             try:
                 message = data['event_update'].message
                 self.torrent_object = transmission_facade.get_torrent_object(message.text)
-                data['torrent_object'] = self.torrent_object
+                self.torrent_dict[message.message_id] = self.torrent_object
+                data['torrent_object'] = self.torrent_dict[message.message_id]
                 return await handler(event, data)
             except Exception as error:
                 print('Middleware error')
@@ -41,13 +41,17 @@ class TorrentMiddleware(BaseMiddleware):
         if type(event) is CallbackQuery:
             if data['event_update'].callback_query.data.startswith('set-category_'):
                 category = data['event_update'].callback_query.data.replace('set-category_', '')
-                transmission_facade.change_category(self.torrent_object, category)
+                torrent_id = data['event_update'].callback_query.message.message_id - 1
+                transmission_facade.change_category(self.torrent_dict[torrent_id], category)
+                data['torrent_object'] = self.torrent_dict[torrent_id]
                 return await handler(event, data)
     
             if data['event_update'].callback_query.data == 'start_download':
-                transmission_facade.add_torrent(self.torrent_object)
+                torrent_id = data['event_update'].callback_query.message.message_id - 1
+                transmission_facade.add_torrent(self.torrent_dict[torrent_id])
                 self.torent_list = transmission_facade.get_torrent_list()
-                data['torrent_list'] = self.torrent_list
+                data['torrent_object'] = self.torrent_dict[torrent_id]
+                data['torrent_list'] = self.torrent_dict
                 return await handler(event, data)
 
 

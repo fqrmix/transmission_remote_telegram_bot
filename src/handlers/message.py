@@ -40,8 +40,8 @@ async def handle_category_callback(callback: CallbackQuery, torrent_object):
         
 
 @router.callback_query(lambda callback: callback.data == 'start_download')
-async def handle_download_callback(callback: CallbackQuery, torrent_list):
-    await callback.message.answer(
+async def handle_download_callback(callback: CallbackQuery, torrent_object):
+    await callback.message.edit_text(
         text=f'Download has started\n'
-            f'{torrent_list}'
+            f'{torrent_object.name}'
     )
