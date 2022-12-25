@@ -10,22 +10,27 @@ router.callback_query.middleware(torrent_middleware)
 
 
 @router.message(content_types="text")
-async def handle_message(message: Message, torrent_object):
-    await message.answer(
-        text=f'Torrent was successfully parsed\n'\
-            f'Torrent type: {torrent_object.type}\n'\
-            f'Category: {torrent_object.category}\n'\
-            f'If you want to change category of torrent - choose option in menu below and press "Start Download".',
-        reply_markup=get_inline_kb()
-    )
+async def handle_message(message: Message, torrent_object, error):
+    if error:
+        await message.answer(
+            text=f'Middleware error!\n{error}'
+        )
+    else:
+        await message.answer(
+            text=f'Torrent was successfully parsed\n'\
+                f'Torrent type: {torrent_object.type}\n'\
+                f'Category: {torrent_object.category}\n'\
+                f'If you want to change category of torrent - choose option in menu below and press "Download".',
+            reply_markup=get_inline_kb()
+        )
 
 @router.callback_query(lambda callback: callback.data.startswith('set-category_'))
 async def handle_category_callback(callback: CallbackQuery, torrent_object):
-    await callback.message.answer(
-        text=f'Torrent was successfully parsed\n'\
+    await callback.message.edit_text(
+        text=f'Category was changed\n'\
             f'Torrent type: {torrent_object.type}\n'\
             f'Category: {torrent_object.category}\n'\
-            f'If you want to change category of torrent - choose option in menu below and press "Start Download".',
+            f'If you want to change category of torrent - choose option in menu below and press "Download".',
         reply_markup=get_inline_kb()
     )
         
