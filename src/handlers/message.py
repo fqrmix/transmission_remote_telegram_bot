@@ -17,21 +17,25 @@ async def handle_message(message: Message, torrent_object, error):
         )
     else:
         await message.answer(
-            text=f'Torrent was successfully parsed\n'\
-                f'Torrent type: {torrent_object.type}\n'\
-                f'Category: {torrent_object.category}\n'\
-                f'If you want to change category of torrent - choose option in menu below and press "Download".',
-            reply_markup=get_inline_kb()
+            text=f'Torrent was successfully parsed\n\n'\
+            f'*[Torrent name] -* `{torrent_object.name}`\n'\
+            f'*[Torrent type] -* `{torrent_object.type}`\n'\
+            f'*[Category] -* `{torrent_object.category}`\n\n'\
+            f'If you want to change category of torrent - choose option in menu below and press "Download".',
+            reply_markup=get_inline_kb(),
+            parse_mode='markdown'
         )
 
 @router.callback_query(lambda callback: callback.data.startswith('set-category_'))
 async def handle_category_callback(callback: CallbackQuery, torrent_object):
     await callback.message.edit_text(
-        text=f'Category was changed\n'\
-            f'Torrent type: {torrent_object.type}\n'\
-            f'Category: {torrent_object.category}\n'\
+        text=f'Category was changed\n\n'\
+            f'*[Torrent name] -* `{torrent_object.name}`\n'\
+            f'*[Torrent type] -* `{torrent_object.type}`\n'\
+            f'*[Category] -* `{torrent_object.category}`\n\n'\
             f'If you want to change category of torrent - choose option in menu below and press "Download".',
-        reply_markup=get_inline_kb()
+        reply_markup=get_inline_kb(),
+        parse_mode='markdown'
     )
         
 
