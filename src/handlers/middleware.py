@@ -1,6 +1,7 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery, TelegramObject
 from transmission_remote_core.app import TransmissionFacade
+from transmission_remote_core.app.core.controller.exception import ParseErorr
 from typing import Callable, Dict, Any, Awaitable
 
 transmission_facade = TransmissionFacade()
@@ -17,21 +18,25 @@ class TorrentMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any]
     ) -> Any:
+
         data['torrent_object'] = self.torrent_object
         data['torrent_list'] = self.torrent_list
+        data['error'] = self.error
+
         if type(event) is Message:
             try:
                 message = data['event_update'].message
-                message.reply('Trying to get torrent object...')
                 self.torrent_object = transmission_facade.get_torrent_object(message.text)
                 data['torrent_object'] = self.torrent_object
                 return await handler(event, data)
             except Exception as error:
                 print('Middleware error')
+                print(error)
                 self.error = error
                 data['error'] = self.error
-                message.reply(f'Middleware erorr: {self.error}')
                 return await handler(event, data)
+            finally:
+                self.error = None
         
         if type(event) is CallbackQuery:
             if data['event_update'].callback_query.data.startswith('set-category_'):
