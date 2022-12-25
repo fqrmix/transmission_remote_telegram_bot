@@ -9,19 +9,29 @@ class TorrentMiddleware(BaseMiddleware):
     def __init__(self) -> None:
         self.torrent_object = None
         self.torrent_list = None
+        self.error = None
 
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
         data: Dict[str, Any]
     ) -> Any:
         data['torrent_object'] = self.torrent_object
         data['torrent_list'] = self.torrent_list
         if type(event) is Message:
-            self.torrent_object = transmission_facade.get_torrent_object(data['event_update'].message.text)
-            data['torrent_object'] = self.torrent_object
-            return await handler(event, data)
+            try:
+                message = data['event_update'].message
+                message.reply('Trying to get torrent object...')
+                self.torrent_object = transmission_facade.get_torrent_object(message.text)
+                data['torrent_object'] = self.torrent_object
+                return await handler(event, data)
+            except Exception as error:
+                print('Middleware error')
+                self.error = error
+                data['error'] = self.error
+                message.reply(f'Middleware erorr: {self.error}')
+                return await handler(event, data)
         
         if type(event) is CallbackQuery:
             if data['event_update'].callback_query.data.startswith('set-category_'):

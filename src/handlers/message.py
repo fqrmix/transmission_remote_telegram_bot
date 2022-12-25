@@ -34,6 +34,5 @@ async def handle_category_callback(callback: CallbackQuery, torrent_object):
 async def handle_download_callback(callback: CallbackQuery, torrent_list):
     await callback.message.answer(
         text=f'Download has started\n'
-            f'{torrent_list}',
-        reply_markup=get_inline_kb()
+            f'{torrent_list}'
     )
